@@ -1,5 +1,5 @@
 # Menggunakan image Go
-FROM golang:1.23-alipine
+FROM golang:1.25-alpine
 
 # Set working directory di dalam container
 WORKDIR /app
