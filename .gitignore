@@ -1,4 +1,37 @@
+# --- Database & Persistence ---
 postgres_data/
+
+# --- Binaries & Executables ---
 *.exe
+*.exe~
+*.dll
+*.so
+*.dylib
 *.bin
-.env
+/bin/
+/dist/
+main
+user-service/main
+
+# --- Environment Variables ---
+.env*
+!.env.example
+
+# --- IDE & Editor ---
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# --- Operating System ---
+.DS_Store
+Thumbs.db
+
+# --- Go Specific ---
+# vendor/
+*.test
+*.out
+cover.out
+
+# --- Docker ---
+.docker/

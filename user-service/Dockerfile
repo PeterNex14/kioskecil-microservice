@@ -1,24 +1,31 @@
-# Menggunakan image Go
-FROM golang:1.25-alpine
+FROM golang:1.25-alpine AS builder
 
-# Set working directory di dalam container
 WORKDIR /app
 
-# Copy modul common
-COPY common/ /common/
+# 1. Copy file workspace dan mod dari semua module
+COPY go.work ./
+COPY common/go.mod common/go.sum ./common/
+COPY user-service/go.mod user-service/go.sum ./user-service/
 
-# Copy file go.mod dan go.sum dari user-service
-COPY user-service/go.mod user-service/go.sum ./
-
-# Download Dependency
+# 2. Download dependencies
 RUN go mod download
 
-# Copy sisa kode user-service
-COPY user-service/ .
+# 3. Copy seluruh source code
+COPY . .
 
-# Build aplikasi
-RUN go build -o main .
+# 4. Build aplikasi
+# Perhatikan path build-nya
+RUN CGO_ENABLED=0 GOOS=linux go build -o main ./user-service/main.go
 
-# Jalankan aplikasi
+FROM alpine:latest
+WORKDIR /root/
+
+RUN apk add --no-cache tzdata
+
+COPY --from=builder /app/main .
+
+# Set environment variable supaya OS tahu pakai zona mana
+ENV TZ=Asia/Jakarta
+
 EXPOSE 8080
 CMD ["./main"]

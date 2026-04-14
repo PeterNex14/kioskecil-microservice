@@ -2,30 +2,29 @@ package database
 
 import (
 	"fmt"
+	"log"
+	"os"
 
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
-type DBSetupParams struct {
-	DBHost string
-	DBUser string
-	DBPassword string
-	DBName string
-	DBPort string
-	DBSslmode string `default:"disable"`
-}
 
-func InitDB(db_config DBSetupParams) (*gorm.DB, error) {
+func InitDB() *gorm.DB {
+
 	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s",
-		db_config.DBHost,
-		db_config.DBUser,
-		db_config.DBPassword,
-		db_config.DBName,
-		db_config.DBPort,
-		db_config.DBSslmode,
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Jakarta",
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_USER"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_NAME"),
+		os.Getenv("DB_PORT"),
 	)
 
-	return gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	if err != nil {
+		log.Fatalf("Gagal koneksi ke database [%s]: %v", os.Getenv("DB_NAME"), err)
+	}
+
+	return db
 }

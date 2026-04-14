@@ -2,54 +2,27 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/PeterNex14/kioskecil-microservice/common/config"
 	"github.com/PeterNex14/kioskecil-microservice/common/database"
-	"github.com/joho/godotenv"
 )
 
+type apiConfig struct {
+	config.BaseConfig
+	JWTSecret 			string
+}
+
 func main() {
-	// Mencoba load .env dari beberapa lokasi yang mungkin
-	_ = godotenv.Load(".env")    // Mencoba di folder saat ini
-	_ = godotenv.Load("../.env") // Mencoba di folder parent (untuk lokal)
+	env := os.Getenv("APP_ENV")
+	serviceName := os.Getenv("SERVICE_NAME")
 
-	db_host, err := config.GetEnv("DB_HOST")
-	if err != nil {
-		log.Fatal("DBHost tidak ditemukan")
+	db := database.InitDB()
+
+	cfg := &apiConfig{
+		BaseConfig: config.NewBaseConfig(db, serviceName, env),
+		JWTSecret: os.Getenv("JWT_SECRET"),
 	}
 
-	db_user, err := config.GetEnv("DB_USER")
-	if err != nil {
-		log.Fatal("DBHost tidak ditemukan")
-	}
-
-	db_password, err := config.GetEnv("DB_PASSWORD")
-	if err != nil {
-		log.Fatal("DBHost tidak ditemukan")
-	}
-
-	db_name, err := config.GetEnv("DB_NAME")
-	if err != nil {
-		log.Fatal("DBHost tidak ditemukan")
-	}
-
-	db_port, err := config.GetEnv("DB_PORT")
-	if err != nil {
-		log.Fatal("DBHost tidak ditemukan")
-	}
-
-	dsn := database.DBSetupParams{
-		DBHost:     db_host,
-		DBUser:     db_user,
-		DBPassword: db_password,
-		DBName:     db_name,
-		DBPort:     db_port,
-	}
-
-	_, err = database.InitDB(dsn)
-	if err != nil {
-		log.Fatal("Gagal koneksi ke database: ", err)
-	}
-
-	log.Println("Berhasil terhubung ke database")
+	log.Printf("Starting [%s] in [%s] mode", cfg.ServiceName, cfg.Environment)
 }
