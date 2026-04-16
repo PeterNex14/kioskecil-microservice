@@ -11,7 +11,9 @@ postgres_data/
 /bin/
 /dist/
 main
-user-service/main
+# Mengabaikan binary hasil build lokal di tiap service
+user-service/user-service
+common/common
 
 # --- Environment Variables ---
 .env*
@@ -32,6 +34,10 @@ Thumbs.db
 *.test
 *.out
 cover.out
+
+# Go Workspace (Disarankan untuk di-ignore agar tidak konflik antar lingkungan dev)
+go.work
+go.work.sum
 
 # --- Docker ---
 .docker/

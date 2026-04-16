@@ -1,9 +1,9 @@
+CREATE USER user_dev_user WITH PASSWORD '894b08a1';
+
 CREATE DATABASE db_users;
 
-CREATE USER gabs_dev WITH PASSWORD '894b08a1';
-
-GRANT ALL PRIVILEGES ON DATABASE db_users TO gabs_dev;
+GRANT ALL PRIVILEGES ON DATABASE db_users TO user_dev_user;
 
 \c db_users
-
-GRANT ALL ON SCHEMA public TO gabs_dev;
+ALTER SCHEMA public OWNER TO user_dev_user;
+GRANT ALL ON SCHEMA public TO user_dev_user;

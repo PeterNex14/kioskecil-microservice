@@ -1,14 +1,16 @@
 package config
 
-import "gorm.io/gorm"
+import (
+	"database/sql"
+)
 
 type BaseConfig struct {
-	DB 				*gorm.DB
+	DB 				*sql.DB
 	ServiceName		string
 	Environment		string
 }
 
-func NewBaseConfig(db *gorm.DB, serviceName string, env string) BaseConfig {
+func NewBaseConfig(db *sql.DB, serviceName string, env string) BaseConfig {
 	return BaseConfig{
 		DB: db,
 		ServiceName: serviceName,

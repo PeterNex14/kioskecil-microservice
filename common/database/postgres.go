@@ -1,16 +1,13 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
-	"log"
 	"os"
-
-	"gorm.io/driver/postgres"
-	"gorm.io/gorm"
 )
 
 
-func InitDB() *gorm.DB {
+func InitDB() (*sql.DB, error) {
 
 	dsn := fmt.Sprintf(
 		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Jakarta",
@@ -21,10 +18,15 @@ func InitDB() *gorm.DB {
 		os.Getenv("DB_PORT"),
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		log.Fatalf("Gagal koneksi ke database [%s]: %v", os.Getenv("DB_NAME"), err)
+		return nil, err
 	}
 
-	return db
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
+	
+
+	return db, nil
 }

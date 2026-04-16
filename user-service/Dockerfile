@@ -4,6 +4,7 @@ WORKDIR /app
 
 # 1. Copy file workspace dan mod dari semua module
 COPY go.work ./
+COPY go.work.sum ./
 COPY common/go.mod common/go.sum ./common/
 COPY user-service/go.mod user-service/go.sum ./user-service/
 
