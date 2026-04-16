@@ -41,11 +41,6 @@ services:
       - ${ENV_FILE:-.env.development}
     environment:
       - SERVICE_NAME=user-service
-      - DB_HOST=${DB_HOST}
-      - DB_NAME=${USER_DB_NAME}
-      - DB_USER=${USER_DB_USER}
-      - DB_PASSWORD=${USER_DB_PASSWORD}
-      - DB_PORT=${DB_PORT}
     depends_on:
       migrate-user:
         condition: service_completed_successfully
