@@ -50,6 +50,10 @@ migrate-new:
 	@if [ -z "$(NAME)" ]; then echo "Error: NAME is required. Usage: make migrate-new NAME=migration_name"; exit 1; fi
 	goose -dir user-service/db/migrations create $(NAME) sql
 
+db-shell:
+	@echo "Entering database shell ($(USER_DB_NAME))..."
+	docker compose exec db_kios psql -U $(USER_DB_USER) -d $(USER_DB_NAME)
+
 # --- Code Generation (SQLC) ---
 
 generate:
