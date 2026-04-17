@@ -33,8 +33,8 @@ services:
   user-service:
     build:
       context: .
-      dockerfile: user-service/Dockerfile
-    container_name: user_service_app
+      dockerfile: ./user-service/Dockerfile
+    container_name: user_service_container
     ports:
       - "8080:8080"
     env_file:

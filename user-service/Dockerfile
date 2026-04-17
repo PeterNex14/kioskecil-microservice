@@ -8,8 +8,8 @@ COPY go.work.sum ./
 COPY common/go.mod common/go.sum ./common/
 COPY user-service/go.mod user-service/go.sum ./user-service/
 
-# 2. Download dependencies
-RUN go mod download
+# 2. Download dependencies with cache mount
+RUN --mount=type=cache,target=/go/pkg/mod go mod download
 
 # 3. Copy seluruh source code
 COPY . .

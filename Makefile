@@ -65,9 +65,9 @@ generate:
 # Run go mod tidy in Docker to ensure toolchain consistency
 tidy:
 	@echo "Cleaning up Go modules (common)..."
-	docker run --rm -v $(shell pwd):/app -w /app/common golang:1.24-alpine go mod tidy
+	docker run --rm -v $(shell pwd):/app -w /app/common golang:1.25-alpine go mod tidy
 	@echo "Cleaning up Go modules (user-service)..."
-	docker run --rm -v $(shell pwd):/app -w /app/user-service golang:1.24-alpine go mod tidy
+	docker run --rm -v $(shell pwd):/app -w /app/user-service golang:1.25-alpine go mod tidy
 
 # --- Help ---
 
