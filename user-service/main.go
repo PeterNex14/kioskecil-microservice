@@ -4,15 +4,19 @@ import (
 	"log"
 
 	"github.com/PeterNex14/kioskecil-microservice/user-service/internal/app"
+	"github.com/PeterNex14/kioskecil-microservice/user-service/internal/config"
 )
 
 func main() {
-	// Initialize the application
-	application, err := app.New()
+	// 1. Load configuration
+	cfg := config.Load()
+
+	// 2. Initialize the application with config
+	application, err := app.New(cfg)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("failed to initialize application: %v", err)
 	}
 
-	// Start the application (this blocks until an exit signal is received)
+	// 3. Start the application (blocks until signal)
 	application.Run()
 }

@@ -4,30 +4,43 @@ import (
 	"database/sql"
 	"fmt"
 
-	"github.com/PeterNex14/kioskecil-microservice/common/config"
+	_ "github.com/lib/pq"
 )
 
-func InitDB() (*sql.DB, error) {
-	// Use config.GetEnv to provide default values if environment variables are missing
-	host := config.GetEnv("DB_HOST", "localhost")
-	user := config.GetEnv("USER_DB_USER", "postgres")
-	password := config.GetEnv("USER_DB_PASSWORD", "password")
-	dbname := config.GetEnv("USER_DB_NAME", "postgres")
-	port := config.GetEnv("DB_PORT", "5432")
+// Config represents the database connection parameters
+type Config struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+	DBName   string
+	SSLMode  string
+	TimeZone string
+}
 
-	// Construct DSN string safely
+// InitDB initializes a PostgreSQL connection using the provided configuration.
+func InitDB(cfg Config) (*sql.DB, error) {
+	// Apply default values if not specified
+	if cfg.SSLMode == "" {
+		cfg.SSLMode = "disable"
+	}
+	if cfg.TimeZone == "" {
+		cfg.TimeZone = "Asia/Jakarta"
+	}
+
+	// Construct DSN string
 	dsn := fmt.Sprintf(
-		"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Jakarta",
-		host, user, password, dbname, port,
+		"host=%s user=%s password=%s dbname=%s port=%s sslmode=%s TimeZone=%s",
+		cfg.Host, cfg.User, cfg.Password, cfg.DBName, cfg.Port, cfg.SSLMode, cfg.TimeZone,
 	)
 
 	db, err := sql.Open("postgres", dsn)
 	if err != nil {
-		return nil, fmt.Errorf("error opening database: %v", err)
+		return nil, fmt.Errorf("error opening database: %w", err)
 	}
 
 	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("error connecting to database [%s]: %v", dbname, err)
+		return nil, fmt.Errorf("error connecting to database [%s]: %w", cfg.DBName, err)
 	}
 
 	return db, nil
