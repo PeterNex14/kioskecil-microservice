@@ -1,11 +1,12 @@
 package main
 
 import (
-	"log"
+	"log/slog"
 	"os"
 
 	"github.com/PeterNex14/kioskecil-microservice/common/config"
 	"github.com/PeterNex14/kioskecil-microservice/common/database"
+	"github.com/PeterNex14/kioskecil-microservice/common/logger"
 	db_users_gen "github.com/PeterNex14/kioskecil-microservice/user-service/db/sqlc"
 
 	_ "github.com/lib/pq"
@@ -18,12 +19,16 @@ type apiConfig struct {
 }
 
 func main() {
-	env := os.Getenv("APP_ENV")
-	serviceName := os.Getenv("SERVICE_NAME")
+	// 1. Initialize Logger
+	env := config.GetEnv("APP_ENV", "development")
+	serviceName := config.GetEnv("SERVICE_NAME", "user-service")
+	logger.InitLogger(env, serviceName)
 
+	// 2. Initialize Database
 	db, err := database.InitDB()
 	if err != nil {
-		log.Fatalf("Gagal koneksi ke database [%s]: %v", os.Getenv("DB_NAME"), err)
+		slog.Error("failed to connect to database", "error", err, "db_name", os.Getenv("DB_NAME"))
+		os.Exit(1)
 	}
 	defer db.Close()
 
@@ -35,5 +40,8 @@ func main() {
 		dbQueries: dbQueries,
 	}
 
-	log.Printf("Starting [%s] in [%s] mode", cfg.ServiceName, cfg.Environment)
+	slog.Info("Service started", 
+		"service", cfg.ServiceName, 
+		"env", cfg.Environment,
+	)
 }
