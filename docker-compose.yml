@@ -4,14 +4,13 @@ services:
     container_name: db_kios_container
     ports:
       - "5432:5432"
-    environment:
-      POSTGRES_USER: super_admin
-      POSTGRES_PASSWORD: super_password
+    env_file:
+      - ${ENV_FILE:-.env.development}
     volumes:
-      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL" , "pg_isready -U super_admin -d postgres"]
+      test: ["CMD-SHELL" , "pg_isready -U ${POSTGRES_USER} -d postgres"]
       interval: 5s
       timeout: 5s
       retries: 5

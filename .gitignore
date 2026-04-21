@@ -41,6 +41,3 @@ go.work.sum
 
 # --- Docker ---
 .docker/
-
-# Notes MD Files
-/docs/
