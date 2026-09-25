@@ -60,7 +60,3 @@ We use a `Makefile` to simplify common development tasks:
 ## 🤝 Contributing
 
 For detailed instructions on how to add a new microservice to this project, please refer to the [Microservice Workflow Guide](./docs/WORKFLOW.md).
-
-
-# Testing SSH
-Testing if it's enabled
