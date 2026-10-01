@@ -10,6 +10,7 @@ type Config struct {
 	Env         string
 	ServiceName string
 	JWTSecret   string
+	AutoMigrate bool
 	DB          database.Config
 }
 
@@ -19,6 +20,7 @@ func Load() *Config {
 		Env:         config.GetEnv("APP_ENV", "development"),
 		ServiceName: config.GetEnv("SERVICE_NAME", "user-service"),
 		JWTSecret:   config.GetEnv("JWT_SECRET", "very-secret-key"),
+		AutoMigrate: config.GetEnv("AUTO_MIGRATE", "true") == "true",
 		DB: database.Config{
 			Host:     config.GetEnv("DB_HOST", "localhost"),
 			Port:     config.GetEnv("DB_PORT", "5432"),

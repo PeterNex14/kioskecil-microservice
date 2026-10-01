@@ -3,7 +3,7 @@ services:
     image: postgres:15-alpine
     container_name: db_kios_container
     ports:
-      - "5432:5432"
+      - "${HOST_DB_PORT:-5432}:5432"
     env_file:
       - ${ENV_FILE:-.env.development}
     volumes:
@@ -15,20 +15,6 @@ services:
       timeout: 5s
       retries: 5
   
-  migrate-user:
-    build: 
-      context: .
-      dockerfile: user-service/Dockerfile.migration
-    container_name: migrate_user_service
-    volumes:
-      - ./user-service/db/migrations:/migrations
-    env_file:
-      - ${ENV_FILE:-.env.development}
-    command: up
-    depends_on:
-      db_kios:
-        condition: service_healthy
-
   user-service:
     build:
       context: .
@@ -41,8 +27,8 @@ services:
     environment:
       - SERVICE_NAME=user-service
     depends_on:
-      migrate-user:
-        condition: service_completed_successfully
+      db_kios:
+        condition: service_healthy
 
 volumes:
   postgres_data:

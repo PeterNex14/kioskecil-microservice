@@ -13,6 +13,7 @@ import (
 	"github.com/PeterNex14/kioskecil-microservice/common/logger"
 	"github.com/PeterNex14/kioskecil-microservice/common/system"
 	db_users_gen "github.com/PeterNex14/kioskecil-microservice/user-service/db/sqlc"
+	user_db "github.com/PeterNex14/kioskecil-microservice/user-service/db"
 	"github.com/PeterNex14/kioskecil-microservice/user-service/internal/config"
 	"github.com/PeterNex14/kioskecil-microservice/user-service/internal/handler"
 	"github.com/PeterNex14/kioskecil-microservice/user-service/internal/repository"
@@ -39,6 +40,14 @@ func New(cfg *config.Config) (*App, error) {
 	if err != nil {
 		slog.Error("failed to connect to database", "error", err, "db_name", cfg.DB.DBName)
 		return nil, err
+	}
+
+	// 2.1. Run Embedded Database Migrations
+	if cfg.AutoMigrate {
+		if err := database.RunMigrations(db, user_db.MigrationsFS, "migrations"); err != nil {
+			slog.Error("failed to run database migrations", "error", err)
+			return nil, err
+		}
 	}
 
 	// 3. Dependency Injection Wiring
