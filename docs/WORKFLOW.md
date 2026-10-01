@@ -1,14 +1,17 @@
 # Microservice Integration Workflow
 
-Follow these steps whenever you create a new microservice (e.g., `order-service`) to ensure its database and environment are correctly set up with the modern **Embedded Migrations** approach.
+Follow these steps whenever you create a new microservice (e.g., `order-service`) to set up its dedicated database and environment with **zero impact on existing service data**.
 
 ---
 
 ### Step 1: Define Environment Variables
-Add the new service's database credentials to your `.env.development` (and `.env.example`).
+Add the new service's database configuration to `.env.development` (and `.env.example`).
 
 ```env
-# Order Service Database Configuration
+# Order Service Database Configuration (Dedicated Container)
+ORDER_DB_HOST=db_orders
+ORDER_DB_PORT=5432
+ORDER_DB_HOST_PORT=5434
 ORDER_DB_USER=order_dev_user
 ORDER_DB_PASSWORD=your_secure_password
 ORDER_DB_NAME=db_orders
@@ -16,23 +19,51 @@ ORDER_DB_NAME=db_orders
 
 ---
 
-### Step 2: Update Database Initialization
-Add a new block to `init-db.sh` to provision the database and user for the new service.
+### Step 2: Add Dedicated Database & Service to `docker-compose.yml`
+Add the dedicated PostgreSQL container and the new service to `docker-compose.yml`.
 
-```bash
-# ... existing user-service block ...
+```yaml
+  db_orders:
+    image: postgres:15-alpine
+    container_name: db_orders_container
+    ports:
+      - "${ORDER_DB_HOST_PORT:-5434}:5432"
+    environment:
+      POSTGRES_DB: ${ORDER_DB_NAME:-db_orders}
+      POSTGRES_USER: ${ORDER_DB_USER:-order_dev_user}
+      POSTGRES_PASSWORD: ${ORDER_DB_PASSWORD:-your_secure_password}
+    volumes:
+      - orders_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${ORDER_DB_USER:-order_dev_user} -d ${ORDER_DB_NAME:-db_orders}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-# Order Service Setup
-psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "postgres" <<-EOSQL
-    CREATE USER $ORDER_DB_USER WITH PASSWORD '$ORDER_DB_PASSWORD';
-    CREATE DATABASE $ORDER_DB_NAME;
-    GRANT ALL PRIVILEGES ON DATABASE $ORDER_DB_NAME TO $ORDER_DB_USER;
-    
-    \c $ORDER_DB_NAME
-    ALTER SCHEMA public OWNER TO $ORDER_DB_USER;
-    GRANT ALL ON SCHEMA public TO $ORDER_DB_USER;
-EOSQL
+  order-service:
+    build:
+      context: .
+      dockerfile: ./order-service/Dockerfile
+    container_name: order_service_container
+    ports:
+      - "8081:8080"
+    env_file:
+      - ${ENV_FILE:-.env.development}
+    environment:
+      - SERVICE_NAME=order-service
+      - DB_HOST=db_orders
+      - DB_PORT=5432
+    depends_on:
+      db_orders:
+        condition: service_healthy
+
+volumes:
+  users_postgres_data:
+  orders_postgres_data:
 ```
+
+> [!NOTE]
+> Notice that **no `init-db.sh` or volume reset is needed**! Existing data in `users_postgres_data` remains completely untouched.
 
 ---
 
@@ -63,40 +94,17 @@ if cfg.AutoMigrate {
 
 ---
 
-### Step 4: Update `docker-compose.yml`
-Add the new service to your `docker-compose.yml`. Notice that **no separate migration container is required**!
-
-```yaml
-  order-service:
-    build:
-      context: .
-      dockerfile: ./order-service/Dockerfile
-    container_name: order_service_container
-    ports:
-      - "8081:8080"
-    env_file:
-      - ${ENV_FILE:-.env.development}
-    environment:
-      - SERVICE_NAME=order-service
-    depends_on:
-      db_kios:
-        condition: service_healthy
-```
-
----
-
-### Step 5: Reset & Apply (If new database created in `init-db.sh`)
-Since the database initialization script (`init-db.sh`) only runs the **first time** the database volume is initialized:
-
+### Step 4: Start & Verify
+Run:
 ```bash
-# WARNING: This deletes local docker volumes!
-docker compose down -v
 make up
 ```
 
----
-
-### Step 6: Verify
-1. Run `make logs` to confirm database connection and embedded migration success:
-   `level=INFO msg="Embedded database migrations applied successfully"`
-2. Hit the service health check endpoint (e.g. `curl http://localhost:8081/health`).
+1. Check logs to confirm startup and migration success:
+   ```bash
+   make logs
+   ```
+2. Verify the new service healthcheck:
+   ```bash
+   curl -i http://localhost:8081/health
+   ```

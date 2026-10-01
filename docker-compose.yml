@@ -1,20 +1,21 @@
 services:
-  db_kios:
+  db_users:
     image: postgres:15-alpine
-    container_name: db_kios_container
+    container_name: db_users_container
     ports:
-      - "${HOST_DB_PORT:-5432}:5432"
-    env_file:
-      - ${ENV_FILE:-.env.development}
+      - "${USER_DB_HOST_PORT:-5433}:5432"
+    environment:
+      POSTGRES_DB: ${USER_DB_NAME:-db_users}
+      POSTGRES_USER: ${USER_DB_USER:-user_dev_user}
+      POSTGRES_PASSWORD: ${USER_DB_PASSWORD:-your_user_password_here}
     volumes:
-      - ./init-db.sh:/docker-entrypoint-initdb.d/init-db.sh
-      - postgres_data:/var/lib/postgresql/data
+      - users_postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL" , "pg_isready -U ${POSTGRES_USER} -d postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${USER_DB_USER:-user_dev_user} -d ${USER_DB_NAME:-db_users}"]
       interval: 5s
       timeout: 5s
       retries: 5
-  
+
   user-service:
     build:
       context: .
@@ -26,9 +27,11 @@ services:
       - ${ENV_FILE:-.env.development}
     environment:
       - SERVICE_NAME=user-service
+      - DB_HOST=db_users
+      - DB_PORT=5432
     depends_on:
-      db_kios:
+      db_users:
         condition: service_healthy
 
 volumes:
-  postgres_data:
+  users_postgres_data:

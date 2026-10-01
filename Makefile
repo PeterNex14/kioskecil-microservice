@@ -35,7 +35,7 @@ build:
 
 migrate-status:
 	@echo "Checking migration status in $(USER_DB_NAME)..."
-	docker compose --env-file $(ENV_FILE) exec db_kios psql -U $(USER_DB_USER) -d $(USER_DB_NAME) -c "SELECT version_id, is_applied, tstamp FROM goose_db_version ORDER BY id DESC;"
+	docker compose --env-file $(ENV_FILE) exec db_users psql -U $(USER_DB_USER) -d $(USER_DB_NAME) -c "SELECT version_id, is_applied, tstamp FROM goose_db_version ORDER BY id DESC;"
 
 migrate-new:
 	@if [ -z "$(NAME)" ]; then echo "Error: NAME is required. Usage: make migrate-new NAME=migration_name"; exit 1; fi
@@ -46,7 +46,7 @@ migrate-new:
 
 db-shell:
 	@echo "Entering database shell ($(USER_DB_NAME))..."
-	docker compose --env-file $(ENV_FILE) exec db_kios psql -U $(USER_DB_USER) -d $(USER_DB_NAME)
+	docker compose --env-file $(ENV_FILE) exec db_users psql -U $(USER_DB_USER) -d $(USER_DB_NAME)
 
 # --- Code Generation (SQLC) ---
 

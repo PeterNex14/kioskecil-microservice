@@ -55,8 +55,8 @@ make up
 
 **What happens behind the scenes:**
 1. Docker builds the `user-service` image using multi-stage builds.
-2. The PostgreSQL container (`db_kios_container`) starts and automatically runs [`init-db.sh`](./init-db.sh) to provision the isolated `db_users` database and credentials.
-3. Once the database passes its health check, `user-service_container` starts up, **automatically executes embedded database migrations** in ~10ms, and begins serving HTTP requests on port `8080`.
+2. The dedicated PostgreSQL container (`db_users_container`) starts and automatically creates the `db_users` database and user credentials.
+3. Once the database passes its health check, `user_service_container` starts up, **automatically executes embedded database migrations** in ~10ms, and begins serving HTTP requests on port `8080`.
 
 ---
 
@@ -67,7 +67,7 @@ make up
 docker compose --env-file .env.development ps
 ```
 You should see:
-* `db_kios_container`: `Up (healthy)`
+* `db_users_container`: `Up (healthy)`
 * `user_service_container`: `Up`
 
 ### 2. Health Check Endpoint
@@ -177,7 +177,6 @@ SQLC will automatically compile your queries into type-safe Go structs and funct
 kioskecil-microservice/
 ├── Makefile                     # Developer task automation
 ├── docker-compose.yml           # Local multi-service infrastructure
-├── init-db.sh                   # Automated PostgreSQL database & user provisioning
 ├── go.work                      # Go workspace linking all modules
 │
 ├── common/                      # Shared code across all microservices
@@ -214,16 +213,11 @@ kioskecil-microservice/
 ### 1. "Port 5432 is already allocated"
 If you already have PostgreSQL running locally:
 * Open `.env.development`.
-* Ensure `HOST_DB_PORT=5433` (or any available port).
-* Services inside Docker will still communicate seamlessly via `db_kios:5432`.
+* Ensure `USER_DB_HOST_PORT=5433` (or any available host port).
+* Services inside Docker will still communicate seamlessly via `db_users:5432`.
 
-### 2. "Database or tables not found after adding a new service"
-[`init-db.sh`](./init-db.sh) only runs **once** when the PostgreSQL volume is first created. If you added a new service database:
-```bash
-# WARNING: This deletes local test database volumes!
-docker compose down -v
-make up
-```
+### 2. "Adding a new microservice without losing existing data"
+Because each microservice has its own dedicated PostgreSQL container and isolated volume (`users_postgres_data`), you **never** need to wipe volumes (`docker compose down -v`) when adding a new service! Simply follow the [Microservice Workflow Guide](./docs/WORKFLOW.md).
 
 ### 3. "Goose version mismatch or Go toolchain errors"
 Always run `make tidy` or `make build`. Dependencies are pinned and resolved within Docker to guarantee a consistent toolchain across all machines.
