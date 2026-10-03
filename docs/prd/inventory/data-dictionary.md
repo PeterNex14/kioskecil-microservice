@@ -16,6 +16,7 @@ Menyimpan data identitas pokok barang dagangan dan satuan dasar terkecilnya (*ba
 | `base_unit` | Text | **Mandatory** | `"Pcs"` | Satuan terkecil produk (misal: Pcs, Sachet, Butir, Bungkus). |
 | `cost_price` | Currency (BigInt IDR) | **Mandatory** | `0` | Harga modal (HPP/COGS) per satuan dasar. Nilai `>= 0`. |
 | `selling_price`| Currency (BigInt IDR) | **Mandatory** | - | Harga jual resmi kasir per satuan dasar. Nilai `> 0`. |
+| `min_stock_alert` | Integer | **Mandatory** | `0` | Ambang batas stok minimum (satuan dasar). Nilai `>= 0`. Jika `0`, alert non-aktif. |
 | `is_active` | Boolean | **Mandatory** | `true` | Status aktif produk. Jika `false`, disembunyikan dari kasir. |
 | `created_by` | Identifier (UUID) | **Mandatory** | - | ID user (Owner) pembuat master produk. |
 | `created_at` | Timestamp with TZ | **Mandatory** | Current Time | Waktu pembuatan data. |

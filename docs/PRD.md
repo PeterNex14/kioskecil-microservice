@@ -97,3 +97,69 @@ Setiap modul memiliki dokumen spesifikasi mandiri yang mencakup User Stories, Ac
 * 💰 **Modul 3: Finance & Debt** ➔ Baca `docs/prd/03-finance-debt.md` *(Upcoming)*
 * 📊 **Modul 4: Reporting & Analytics** ➔ Baca `docs/prd/04-reporting.md` *(Upcoming)*
 
+---
+
+## 7. Functional Requirements (FR)
+
+Kebutuhan fungsional mendefinisikan kapabilitas dan fitur sistem yang harus disediakan oleh platform KiosKecil:
+
+### 📦 A. Modul Inventory & Master Data (`inventory-service`)
+Bertanggung jawab atas pengelolaan data barang, harga, dan pergerakan stok sebelum dijual:
+* **`[FR-INV-01]` Manajemen Produk**: Sistem harus dapat menyimpan data pokok produk (Nama, Barcode/SKU unik, Kategori).
+* **`[FR-INV-02]` Multi-Unit Conversion**: Sistem harus mendukung minimal 2 level satuan (misal: Dus dan Pcs) dengan satu faktor konversi tetap (`> 1`).
+* **`[FR-INV-03]` Pricing Logic**: Sistem harus menyimpan Harga Modal (COGS/HPP) dan Harga Jual resmi untuk setiap level satuan.
+* **`[FR-INV-04]` Stock Management**: Sistem harus otomatis menambah stok saat *restock* dan mengurangi stok saat *sales checkout* (berdasarkan konversi ke satuan dasar).
+* **`[FR-INV-05]` Stock Adjustment**: Sistem harus menyediakan fitur manual untuk mengoreksi kuantitas stok fisik dengan alasan terstandarisasi (*Rusak*, *Expired*, *Pemakaian Pribadi/Owner Use*, *Selisih Opname*).
+* **`[FR-INV-06]` Low Stock Alert**: Sistem harus memberikan tanda visual jika kuantitas stok berada di bawah ambang batas minimum yang ditentukan Owner.
+
+### 🛒 B. Modul Sales & POS Transaction (`pos-service`)
+Mesin transaksi utama yang digunakan pada meja kasir operasional harian:
+* **`[FR-SAL-01]` Point of Sale Interface**: Sistem harus menyediakan pencarian produk secara cepat (pencarian instan nama atau scan barcode fisik).
+* **`[FR-SAL-02]` Cart Management**: Sistem harus dapat menambah, mengubah kuantitas, dan menghapus item dalam keranjang belanja sebelum checkout.
+* **`[FR-SAL-03]` Hold / Resume Transaction**: Sistem harus mampu menyimpan minimal 5 transaksi "Draft" sekaligus untuk menangani interupsi antrean pembeli.
+* **`[FR-SAL-04]` Hybrid Calculation**: Sistem harus otomatis menghitung total harga jika dalam satu keranjang terdapat kombinasi satuan kemasan (misal: 1 Dus + 5 Pcs Indomie).
+* **`[FR-SAL-05]` Flexible Pricing (Service / Pulsa)**: Sistem harus mendukung produk bertipe "Jasa" / non-fisik di mana harga jual (*Open Price*) dan biaya admin dapat diinput fleksibel saat transaksi tanpa memotong stok.
+* **`[FR-SAL-06]` Payment Processing**: Sistem harus mendukung berbagai metode bayar: Tunai (dengan hitungan kembalian otomatis), Kasbon / Hutang Pelanggan, dan Campuran (*Split Payment*).
+* **`[FR-SAL-07]` Receipt Generation**: Sistem harus menghasilkan ringkasan transaksi (Struk) yang dapat dicetak fisik maupun dibagikan secara digital.
+
+### 💰 C. Modul Finance & Debt (`finance-service`)
+Mencatat arus kas masuk dan keluar di luar transaksi langsung penjualan barang dagangan:
+* **`[FR-FIN-01]` Expense Logging**: Sistem harus mampu mencatat biaya operasional warung non-stok berdasarkan kategori (Listrik, Air, Kantong Plastik, Keamanan, Kebersihan, dll).
+* **`[FR-FIN-02]` Debt Ledger**: Sistem harus mencatat buku besar piutang per pelanggan dan menyediakan fitur pencatatan cicilan atau pelunasan hutang.
+* **`[FR-FIN-03]` Profit Calculation**: Sistem harus menghitung Laba Kotor (*Gross Profit = Sales - COGS*) secara otomatis setiap transaksi selesai.
+
+### 📊 D. Modul Reporting & Analytics (`reporting-service`)
+Pengolahan data transaksi menjadi informasi dan wawasan bisnis bagi pemilik warung:
+* **`[FR-REP-01]` Real-time Dashboard**: Menampilkan ringkasan harian performa warung (Total Omzet, Total Laba Kotor, dan Kasbon baru hari ini).
+* **`[FR-REP-02]` P&L Statement**: Menghasilkan laporan laba rugi komprehensif berkala (*Laba Bersih = Laba Kotor - Beban Operasional*).
+* **`[FR-REP-03]` Rank Analysis**: Menampilkan peringkat produk terlaris (*Top 10 Best Seller*) dan produk macet (*Top 10 Slow-Moving items > 30 hari*).
+* **`[FR-REP-04]` Inventory Turnover Insights**: Menampilkan estimasi perputaran stok dan sisa hari sebelum stok habis berdasarkan rata-rata penjualan harian.
+
+---
+
+## 8. Non-Functional Requirements (NFR)
+
+Kebutuhan non-fungsional mendefinisikan batasan teknis, kualitas performa, keamanan, dan keandalan arsitektur KiosKecil:
+
+### ⚡ 1. Performance (Kecepatan & Responsivitas)
+* **`[NFR-PER-01]` Response Time**: Pencarian produk (*Search / Barcode Scan*) harus memberikan hasil dalam waktu **< 500 ms**, agar kasir tidak terhambat saat melayani antrean panjang.
+* **`[NFR-PER-02]` Startup Time**: Service backend Go harus dapat *booting* dan siap menerima request dalam waktu **< 5 detik** saat server dinyalakan.
+
+### 🛡️ 2. Reliability & Availability (Keandalan & Ketahanan Data)
+* **`[NFR-REL-01]` Data Persistence (ACID)**: Setiap transaksi yang berstatus lunas (*Completed*) wajib tersimpan permanen di database PostgreSQL secara atomik. Jika listrik padam atau sistem mati mendadak, data transaksi tidak boleh rusak (*corrupt*) atau hilang.
+* **`[NFR-REL-02]` Offline-First Mindset**: Sistem dirancang untuk operasional warung lokal, sehingga harus dapat berjalan stabil di jaringan lokal / localhost tanpa ketergantungan koneksi internet publik.
+
+### 🔒 3. Security (Keamanan Akses & Integritas)
+* **`[NFR-SEC-01]` Role-Based Access Control (RBAC)**: Terdapat pemisahan wewenang yang tegas antara:
+  * **Kasir (`cashier`)**: Hanya diizinkan mengakses transaksi kasir, lookup katalog, dan riwayat shift kasir hari ini.
+  * **Pemilik (`owner`)**: Memiliki kontrol penuh atas master data, konfigurasi harga modal (COGS), penyesuaian stok, pengeluaran, dan seluruh laporan finansial.
+* **`[NFR-SEC-02]` Strict Input Validation**: Sistem wajib menolak input angka negatif atau harga nol pada entri yang tidak sah untuk mencegah *human error* dan bug integritas database.
+
+### 🏗️ 4. Maintainability & Observability (Kemudahan Pemeliharaan)
+* **`[NFR-MAI-01]` Clean Layered Architecture**: Kode microservice Go wajib mengikuti pola *Layered Clean Architecture* (`handler` -> `service` -> `repository`) dengan *Database-per-Service* agar modular dan mudah diperluas (misal: integrasi pembayaran QRIS di masa depan).
+* **`[NFR-MAI-02]` Structured Logging**: Seluruh error operasional dan mutasi penting wajib dicatat menggunakan structured logger bawaan Go (`log/slog` via `common/logger`) berpasangan *key-value*, tanpa menggunakan `fmt.Println` atau `panic()`.
+
+### ⌨️ 5. Usability (Kemudahan Penggunaan Operasional)
+* **`[NFR-USA-01]` Keyboard-Friendly Navigation**: Antarmuka kasir dirancang ergonomis dengan dukungan *shortcut keyboard* untuk navigasi cepat (pencarian barang, tambah kuantitas, tahan antrean, dan pemicu pembayaran) tanpa mewajibkan penggunaan mouse/trackpad.
+
+
